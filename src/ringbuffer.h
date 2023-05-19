@@ -1,6 +1,7 @@
 #pragma once
 
-typedef struct {
+typedef struct _ringbuffer_t
+{
   void* data;
   int element_size;
   int capacity;
@@ -9,9 +10,8 @@ typedef struct {
 } ringbuffer_t;
 
 #ifdef TEST
-#include "serial.h"
-void ringbuffer_tests(fds_t* fds) __fromfile("ringbuffer.c");
-void ringbuffer_dump(ringbuffer_t*, fds_t*) __fromfile("ringbuffer.c");
+void ringbuffer_tests() __fromfile("ringbuffer.c");
+void ringbuffer_dump(ringbuffer_t*) __fromfile("ringbuffer.c");
 #endif
 
 
@@ -44,4 +44,4 @@ int ringbuffer_free(ringbuffer_t*) __fromfile("ringbuffer.c");
 // Pass an array of anything, and let both the overall size of the array
 // as well as the size of one element determine the arguments.
 #define RINGBUFFER_INIT(rb, data) \
-  ringbuffer_init(rb, &data[0], sizeof(data[0]), sizeof(data) / sizeof(data[0]))
+  ringbuffer_init(rb, (void*)&data[0], sizeof(data[0]), sizeof(data) / sizeof(data[0]))

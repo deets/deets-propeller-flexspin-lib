@@ -1,5 +1,5 @@
 #include "ringbuffer.h"
-#include "assert.h"
+#include <assert.h>
 #include <string.h>
 
 
@@ -50,66 +50,66 @@ int ringbuffer_free(ringbuffer_t* rb)
 }
 
 #ifdef TEST
-void ringbuffer_dump(ringbuffer_t*, fds_t* fds)
+void ringbuffer_dump(ringbuffer_t*)
 {
   //fds->str("-----\r\n");
 }
 
 
-void ringbuffer_tests(fds_t* fds)
+void ringbuffer_tests()
 {
-  fds->str("ringbuffer_tests:begin\r\n");
+  //fds->str("ringbuffer_tests:begin\r\n");
   ringbuffer_t rb;
   // Allocate some extra space to check for spillover
   unsigned data[4 + 4];
   memset(&data[0], 0xff, sizeof(data));
   unsigned item, another_item;
   ringbuffer_init(&rb, &data[0], sizeof(unsigned), (sizeof(data) >> 1) / sizeof(unsigned));
-  ASSERT(rb.capacity == 4, fds);
-  ASSERT(ringbuffer_empty(&rb), fds);
+  assert(rb.capacity == 4);
+  assert(ringbuffer_empty(&rb));
 
   item = 1000;
-  ASSERT(!ringbuffer_push(&rb, &item), fds);
-  ASSERT(!ringbuffer_empty(&rb), fds);
-  ASSERT(data[0] == 1000, fds);
-  ASSERT(ringbuffer_pop(&rb, &another_item), fds);
-  ASSERT(item == another_item, fds);
-  ASSERT(rb.read == 1, fds);
-  ASSERT(rb.write == 1, fds);
-  ASSERT(!ringbuffer_push(&rb, &item), fds);
-  ASSERT(data[1] == 1000, fds);
-  ASSERT(ringbuffer_pop(&rb, &another_item), fds);
-  ASSERT(item == another_item, fds);
+  assert(!ringbuffer_push(&rb, &item));
+  assert(!ringbuffer_empty(&rb));
+  assert(data[0] == 1000);
+  assert(ringbuffer_pop(&rb, &another_item));
+  assert(item == another_item);
+  assert(rb.read == 1);
+  assert(rb.write == 1);
+  assert(!ringbuffer_push(&rb, &item));
+  assert(data[1] == 1000);
+  assert(ringbuffer_pop(&rb, &another_item));
+  assert(item == another_item);
 
   // Write over our RB multiple times it's capacity
   for(int i = 0; i < rb.capacity * 2; ++i)
   {
-    ASSERT(!ringbuffer_push(&rb, &item), fds);
-    ASSERT(ringbuffer_pop(&rb, &another_item), fds);
-    ASSERT(item == another_item, fds);
+    assert(!ringbuffer_push(&rb, &item));
+    assert(ringbuffer_pop(&rb, &another_item));
+    assert(item == another_item);
   }
   // Check for spillover
-  ASSERT(data[3] == 1000, fds);
-  ASSERT(data[4] == 0xffffffff, fds);
+  assert(data[3] == 1000);
+  assert(data[4] == 0xffffffff);
 
   rb.read = rb.write = 0;
-  ASSERT(ringbuffer_empty(&rb), fds);
-  ASSERT(ringbuffer_count(&rb) == 0, fds);
-  ASSERT(ringbuffer_free(&rb) == 3, fds);
-  ASSERT(!ringbuffer_push(&rb, &item), fds);
-  ASSERT(ringbuffer_count(&rb) == 1, fds);
+  assert(ringbuffer_empty(&rb));
+  assert(ringbuffer_count(&rb) == 0);
+  assert(ringbuffer_free(&rb) == 3);
+  assert(!ringbuffer_push(&rb, &item));
+  assert(ringbuffer_count(&rb) == 1);
 
   // Now using the macro, we should
   // arrive at the full size of data. Rest
   // stays the same
   RINGBUFFER_INIT(&rb, data);
-  ASSERT(rb.capacity == 8, fds);
-  ASSERT(rb.read == 0, fds);
-  ASSERT(rb.write == 0, fds);
-  ASSERT(rb.element_size == 4, fds);
-  ASSERT(rb.data == &data[0], fds);
+  assert(rb.capacity == 8);
+  assert(rb.read == 0);
+  assert(rb.write == 0);
+  assert(rb.element_size == 4);
+  assert(rb.data == &data[0]);
 
-  fds->str("ringbuffer_tests:finished\r\n");
+  printf("ringbuffer_tests:finished\r\n");
 }
 
 #endif
