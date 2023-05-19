@@ -1,4 +1,7 @@
 #pragma once
+#include <sys/size_t.h>
+
+typedef void* (*memcpy_t)(void *dest, const void *src, size_t n);
 
 typedef struct _ringbuffer_t
 {
@@ -7,6 +10,10 @@ typedef struct _ringbuffer_t
   int capacity;
   int write;
   int read;
+  // dest is located inside the buffer, src outside
+  memcpy_t copy_to_buffer;
+  // dest is located outside the buffer, dest inside
+  memcpy_t copy_from_buffer;
 } ringbuffer_t;
 
 #ifdef TEST
@@ -15,7 +22,7 @@ void ringbuffer_dump(ringbuffer_t*) __fromfile("ringbuffer.c");
 #endif
 
 
-void ringbuffer_init(ringbuffer_t*, unsigned* data, unsigned element_size, unsigned capacity) __fromfile("ringbuffer.c");
+void ringbuffer_init(ringbuffer_t*, unsigned* data, unsigned element_size, unsigned capacity, memcpy_t copy_to_buffer, memcpy_t copy_from_buffer) __fromfile("ringbuffer.c");
 
 // Check if the ringbuffer is empty.
 int ringbuffer_empty(ringbuffer_t*) __fromfile("ringbuffer.c");
@@ -44,4 +51,4 @@ int ringbuffer_free(ringbuffer_t*) __fromfile("ringbuffer.c");
 // Pass an array of anything, and let both the overall size of the array
 // as well as the size of one element determine the arguments.
 #define RINGBUFFER_INIT(rb, data) \
-  ringbuffer_init(rb, (void*)&data[0], sizeof(data[0]), sizeof(data) / sizeof(data[0]))
+  ringbuffer_init(rb, (void*)&data[0], sizeof(data[0]), sizeof(data) / sizeof(data[0]), NULL, NULL)

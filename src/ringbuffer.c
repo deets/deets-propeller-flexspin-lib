@@ -3,13 +3,29 @@
 #include <string.h>
 
 
-void ringbuffer_init(ringbuffer_t* rb, unsigned* data, unsigned element_size, unsigned capacity)
+void ringbuffer_init(ringbuffer_t* rb, unsigned* data, unsigned element_size, unsigned capacity, memcpy_t copy_to_buffer, memcpy_t copy_from_buffer)
 {
   rb->data = data;
   rb->element_size = element_size;
   rb->capacity = capacity;
   rb->read = 0;
   rb->write = 0;
+  if(copy_from_buffer)
+  {
+    rb->copy_from_buffer = copy_from_buffer;
+  }
+  else
+  {
+    rb->copy_from_buffer = memcpy;
+  }
+  if(copy_to_buffer)
+  {
+    rb->copy_to_buffer = copy_to_buffer;
+  }
+  else
+  {
+    rb->copy_to_buffer = memcpy;
+  }
 }
 
 int ringbuffer_empty(ringbuffer_t* rb)
@@ -21,7 +37,7 @@ int ringbuffer_push(ringbuffer_t* rb, const void* item)
 {
   unsigned s = rb->element_size;
   unsigned read = rb->read;
-  memcpy(rb->data + rb->write * s, item, s);
+  rb->copy_to_buffer(rb->data + rb->write * s, item, s);
   // if we are empty after the write, we did overflow
   rb->write = (rb->write + 1) % rb->capacity;
   return read == rb->write;
@@ -31,7 +47,7 @@ int ringbuffer_pop(ringbuffer_t* rb, void* item)
 {
   unsigned s = rb->element_size;
   int empty = rb->write == rb->read;
-  memcpy(item, rb->data + rb->read * s, s);
+  rb->copy_from_buffer(item, rb->data + rb->read * s, s);
   rb->read = (rb->read + 1) % rb->capacity;
   return !empty;
 }
@@ -64,7 +80,7 @@ void ringbuffer_tests()
   unsigned data[4 + 4];
   memset(&data[0], 0xff, sizeof(data));
   unsigned item, another_item;
-  ringbuffer_init(&rb, &data[0], sizeof(unsigned), (sizeof(data) >> 1) / sizeof(unsigned));
+  ringbuffer_init(&rb, &data[0], sizeof(unsigned), (sizeof(data) >> 1) / sizeof(unsigned), NULL, NULL);
   assert(rb.capacity == 4);
   assert(ringbuffer_empty(&rb));
 
